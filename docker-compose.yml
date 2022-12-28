@@ -6,30 +6,20 @@ services:
     hostname: 'rabbitmq'
     command: sh -c "rabbitmq-plugins enable rabbitmq_management; rabbitmq-server"
     environment:
-      - RABBITMQ_DEFAULT_USER=user
-      - RABBITMQ_DEFAULT_PASS=mypass
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
     ports:
       - 5672:5672
       - 15672:15672
-#    networks: 
-#      - visitorstracker_network
+      
+  pixel-serivse:
+    image: 'pixel-serivse'
+    build:
+      context: .
+      dockerfile: VisitorsTracker.Pixel\Dockerfile
 
-#  pixel:
-#    build: pixel
-#    ports:
-#      - 443:443
-#      - 80:49153
-#    networks: 
-#      - visitorstracker_network
-
-#networks:
-#  visitorstracker_network:
-#    driver: bridge
-#    name: visitorstracker_network
-
-  #pixel-service:
-  #  image: ./pixel
-  #  expose:
-  #      - "80"
-  #  ports:
-  #      - "49153:80"
+  storge-service:
+    image: 'storge-service'
+    build:
+      context: .
+      dockerfile: VisitorsTracker.Storage\Dockerfile

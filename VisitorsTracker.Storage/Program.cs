@@ -1,5 +1,4 @@
-﻿using Common;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
@@ -8,22 +7,13 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using VisitorsTracker.Common;
 
 var configuration = new ConfigurationBuilder()
     .AddJsonFile($"appsettings.json")
     .Build();
 
 var logPath = configuration["VisitorsLogLocation"];
-
-//var factory = new ConnectionFactory()
-//{
-//    Uri = new Uri("amqp://guest:guest@localhost:5672")
-//    //HostName = "localhost",
-//    //UserName = "user",
-//    //Password = "mypass",
-//    ////do we need this variable?
-//    //VirtualHost = "/"
-//};
 
 var factory = new ConnectionFactory();
 
@@ -39,15 +29,15 @@ channel.QueueDeclare(queue: "visitors",
                      arguments: null);
 
 var consumer = new EventingBasicConsumer(channel);
-consumer.Received += (model, eventArgs) =>
+
+consumer.Received += async (model, eventArgs) =>
 {
     var body = eventArgs.Body.ToArray();
     var message = JsonSerializer.Deserialize<Message>(body);
 
     if (message != null)
     {
-        message.Date = DateTime.UtcNow;
-        AppendLineToFileAsync(logPath, message.ToString());
+        await AppendLineToFileAsync(logPath, message.ToString());
     }
 };
 
@@ -57,7 +47,7 @@ channel.BasicConsume(queue: "visitors",
 
 Console.ReadKey();
 
-static void AppendLineToFileAsync(string path, string line)
+static async Task AppendLineToFileAsync(string path, string line)
 {
     if (string.IsNullOrWhiteSpace(path))
         throw new ArgumentOutOfRangeException(nameof(path), path, "Was null or whitepsace.");
@@ -68,6 +58,6 @@ static void AppendLineToFileAsync(string path, string line)
     using var file = File.Open(path, FileMode.Append, FileAccess.Write);
     using var writer = new StreamWriter(file);
 
-    writer.WriteLine(line);
-    writer.Flush();
+    await writer.WriteLineAsync(line);
+    await writer.FlushAsync();
 }
