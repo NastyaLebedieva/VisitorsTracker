@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Storage": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}

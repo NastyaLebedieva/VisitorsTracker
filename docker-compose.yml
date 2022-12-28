@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  rabbitmq:
+    image: rabbitmq:3.8-management
+    container_name: 'rabbitmq'
+    hostname: 'rabbitmq'
+    command: sh -c "rabbitmq-plugins enable rabbitmq_management; rabbitmq-server"
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=mypass
+    ports:
+      - 5672:5672
+      - 15672:15672
+#    networks: 
+#      - visitorstracker_network
+
+#  pixel:
+#    build: pixel
+#    ports:
+#      - 443:443
+#      - 80:49153
+#    networks: 
+#      - visitorstracker_network
+
+#networks:
+#  visitorstracker_network:
+#    driver: bridge
+#    name: visitorstracker_network
+
+  #pixel-service:
+  #  image: ./pixel
+  #  expose:
+  #      - "80"
+  #  ports:
+  #      - "49153:80"
