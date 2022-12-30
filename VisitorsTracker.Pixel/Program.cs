@@ -3,7 +3,8 @@ using VisitorsTracker.Common;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddScoped<IMessageProducer, MessageProducer>();
+builder.Services.Configure<RabbitMqConnection>(builder.Configuration.GetSection("RabbitMq"));
+builder.Services.AddSingleton<IMessageProducer, MessageProducer>();
 
 var app = builder.Build();
 

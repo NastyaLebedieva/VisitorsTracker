@@ -1,34 +1,30 @@
 ﻿using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Reflection;
-using System.Text;
 using System.Text.Json;
 using VisitorsTracker.Common;
+using VisitorsTracker.Storage;
 
 var configuration = new ConfigurationBuilder()
     .AddJsonFile($"appsettings.json")
     .Build();
 
-var logPath = configuration["VisitorsLogLocation"];
+var logPath = configuration.GetSection("VisitorsLogLocation").Value;
 
 var factory = new ConnectionFactory();
-
-configuration.GetSection("RabbitMqConnection").Bind(factory);
+configuration.GetSection("RabbitMq").Bind(factory);
 
 using var connection = factory.CreateConnection();
 using var channel = connection.CreateModel();
 
-channel.QueueDeclare(queue: "visitors",
-                     durable: true, 
+var queueName = configuration.GetSection("RabbitMq:Queue").Value;
+channel.QueueDeclare(queue: queueName,
+                     durable: true,
                      exclusive: false,
                      autoDelete: false,
                      arguments: null);
 
-var consumer = new EventingBasicConsumer(channel);
+var consumer = new AsyncEventingBasicConsumer(channel);
 
 consumer.Received += async (model, eventArgs) =>
 {
@@ -37,27 +33,14 @@ consumer.Received += async (model, eventArgs) =>
 
     if (message != null)
     {
-        await AppendLineToFileAsync(logPath, message.ToString());
+        await FileHelper.AppendLineToFileAsync(logPath, message.ToString());
     }
+
+    await Task.Yield();
 };
 
-channel.BasicConsume(queue: "visitors",
+channel.BasicConsume(queue: queueName,
                      autoAck: true,
                      consumer: consumer);
 
 Console.ReadKey();
-
-static async Task AppendLineToFileAsync(string path, string line)
-{
-    if (string.IsNullOrWhiteSpace(path))
-        throw new ArgumentOutOfRangeException(nameof(path), path, "Was null or whitepsace.");
-
-    if (!File.Exists(path))
-        throw new FileNotFoundException("File not found.", nameof(path));
-
-    using var file = File.Open(path, FileMode.Append, FileAccess.Write);
-    using var writer = new StreamWriter(file);
-
-    await writer.WriteLineAsync(line);
-    await writer.FlushAsync();
-}
