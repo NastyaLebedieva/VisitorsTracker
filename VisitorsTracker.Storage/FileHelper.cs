@@ -2,7 +2,7 @@
 {
     public static class FileHelper
     {
-        public static async Task AppendLineToFileAsync(string path, string line)
+        public static void AppendLineToFileAsync(string path, string line)
         {
             if (string.IsNullOrWhiteSpace(path))
                 throw new ArgumentOutOfRangeException(nameof(path), path, "Null or whitepsace.");
@@ -13,8 +13,8 @@
             using var file = File.Open(path, FileMode.Append, FileAccess.Write);
             using var writer = new StreamWriter(file);
 
-            await writer.WriteLineAsync(line);
-            await writer.FlushAsync();
+            writer.WriteLine(line);
+            writer.Flush();
         }
     }
 }

@@ -24,19 +24,17 @@ channel.QueueDeclare(queue: queueName,
                      autoDelete: false,
                      arguments: null);
 
-var consumer = new AsyncEventingBasicConsumer(channel);
+var consumer = new EventingBasicConsumer(channel);
 
-consumer.Received += async (model, eventArgs) =>
+consumer.Received += (model, eventArgs) =>
 {
     var body = eventArgs.Body.ToArray();
     var message = JsonSerializer.Deserialize<Message>(body);
 
     if (message != null)
     {
-        await FileHelper.AppendLineToFileAsync(logPath, message.ToString());
+        FileHelper.AppendLineToFileAsync(logPath, message.ToString());
     }
-
-    await Task.Yield();
 };
 
 channel.BasicConsume(queue: queueName,
